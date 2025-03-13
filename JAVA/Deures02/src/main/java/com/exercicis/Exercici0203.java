@@ -125,51 +125,72 @@ public class Exercici0203 {
      * @test ./runTest.sh com.exercicis.TestExercici0203#testLoadMonuments
      */
     public static ArrayList<HashMap<String, Object>> loadMonuments(String filePath) throws IOException {
-
-        ArrayList<HashMap<String, Object>> rst = new ArrayList<>(); //creamos una lista vacia
-        String content = new String(Files.readAllBytes(Paths.get(filePath))); //leer  el contenido del json
-        JSONArray monumentsArray = new JSONObject(content).getJSONArray("monuments"); //hacemos una lista con los datos del json
+        ArrayList<HashMap<String, Object>> rst = new ArrayList<>(); // Crear una lista vacía para almacenar los monumentos
+    
+        // Leer el contenido del archivo JSON especificado
+        String content = new String(Files.readAllBytes(Paths.get(filePath))); 
+        // Convertir el contenido JSON a un objeto JSONObject y obtener el array "monuments"
+        JSONArray monumentsArray = new JSONObject(content).getJSONArray("monuments"); 
+    
+        // Recorrer cada elemento en el array de monumentos
         for (int i = 0; i < monumentsArray.length(); i++) {
-            JSONObject monument = monumentsArray.getJSONObject(i); //con esto pillas cada monumento del json
-            HashMap<String, Object> monumentHM = new HashMap<>(); //nuevo hashmap
-            //recorrer las llaves del momument(nombre..pais....) y comprobar
-            for (String key : monument.keySet())  {
+            // Obtener cada monumento (un JSONObject) del array
+            JSONObject monument = monumentsArray.getJSONObject(i);
+            HashMap<String, Object> monumentHM = new HashMap<>(); // Crear un nuevo HashMap para almacenar los datos del monumento
+    
+            // Recorrer las claves del monumento (como "nom", "pais", "categoria", etc.)
+            for (String key : monument.keySet()) {
+                // Si la clave es "nom", "pais" o "categoria", se agrega directamente al HashMap
                 if (key.equals("nom") || key.equals("pais") || key.equals("categoria")) {
-                    monumentHM.put(key, monument.get(key)); //colocas en el hashmap el valor(nombre,pais o categoria)
-                } else if (key.equals("detalls")) { //si la llave es detalles
-                    JSONObject detalls = monument.getJSONObject(key); //!!!!!!!!! pilla el diccionario con todo lo de detalles en lugar de todo. (es especifico)
-                    HashMap<String, Object> detallsMap = new HashMap<>();
-                    HashMap<String, Object> altres = new HashMap<>();
+                    monumentHM.put(key, monument.get(key)); // Agregar la clave y su valor al HashMap
+                } 
+                // Si la clave es "detalls", se procesa de forma especial ya que contiene un objeto con más detalles
+                else if (key.equals("detalls")) {
+                    JSONObject detalls = monument.getJSONObject(key); // Obtener el objeto "detalls" del monumento
+                    HashMap<String, Object> detallsMap = new HashMap<>(); // Crear un HashMap para los detalles del monumento
+                    HashMap<String, Object> altres = new HashMap<>(); // Crear un HashMap para los "otros" detalles que no son específicos
+    
+                    // Recorrer las claves dentro del objeto "detalls"
                     for (String detallsKey : detalls.keySet()) {
-                        if (detallsKey.equals("coordenades")) { //si la llave es coordenades
+                        // Si la clave es "coordenades", procesar las coordenadas
+                        if (detallsKey.equals("coordenades")) {
                             HashMap<String, Object> coordsMap = new HashMap<>();
-                            JSONObject coordenadesJSON = detalls.getJSONObject("coordenades"); //esta dentro de detalles, asi que lo obtenemos de ahi con getJSONobject(coordenades)
-                            Double lat = coordenadesJSON.getDouble("latitud");
-                            Double lon =  coordenadesJSON.getDouble("longitud");
-                            coordsMap.put("latitud", lat);
-                            coordsMap.put("longitud",lon);
-                            detallsMap.put("coordenades", coordsMap);
-
-                        } else if (detallsKey.equals("any_declaracio")) {
-                                int any =  detalls.getInt("any_declaracio");
-                                detallsMap.put("any_declaracio", any);
-                        } else {
+                            JSONObject coordenadesJSON = detalls.getJSONObject("coordenades"); // Obtener el objeto "coordenades"
+                            Double lat = coordenadesJSON.getDouble("latitud"); // Obtener la latitud
+                            Double lon = coordenadesJSON.getDouble("longitud"); // Obtener la longitud
+                            coordsMap.put("latitud", lat); // Guardar la latitud en el HashMap
+                            coordsMap.put("longitud", lon); // Guardar la longitud en el HashMap
+                            detallsMap.put("coordenades", coordsMap); // Añadir las coordenadas al HashMap de detalles
+                        } 
+                        // Si la clave es "any_declaracio", almacenar el año de declaración
+                        else if (detallsKey.equals("any_declaracio")) {
+                            int any = detalls.getInt("any_declaracio"); // Obtener el año de declaración
+                            detallsMap.put("any_declaracio", any); // Guardar el año en el HashMap de detalles
+                        } 
+                        // Para cualquier otra clave, guardarla como un "otro" detalle
+                        else {
                             HashMap<String, Object> altre = new HashMap<>();
-                            altre.put("clau", detallsKey);
-                            altre.put("valor", detalls.get(detallsKey));
-                            altres.put(detallsKey, altre);
+                            altre.put("clau", detallsKey); // Guardar la clave
+                            altre.put("valor", detalls.get(detallsKey)); // Guardar el valor correspondiente
+                            altres.put(detallsKey, altre); // Añadir el otro detalle al HashMap "altres"
                         }
-                        
                     }
+    
+                    // Añadir el HashMap de "altres" (otros detalles) a los detalles
                     detallsMap.put("altres", altres);
+                    // Añadir el HashMap de detalles al HashMap del monumento
                     monumentHM.put(key, detallsMap);
                 }
             }
-            rst.add(monumentHM); //añades el hashmap al ArrayList
+    
+            // Añadir el HashMap del monumento a la lista de resultados
+            rst.add(monumentHM);
         }
-        return rst; //devuelve el  arrayList
+    
+        // Devolver la lista de monumentos
+        return rst;
     }
-
+    
     /**
      * Obté el valor d'un monument segons el camp especificat.
      * Es pot utilitzar tant per a ordenació com per a filtratge.
@@ -188,36 +209,42 @@ public class Exercici0203 {
      * 
      * @test ./runTest.sh com.exercicis.TestExercici0203#testGetMonumentValue
      */
-    static Object getMonumentValue(HashMap<String,Object> monument, String key) {
-        //el switch es como un if
+    static Object getMonumentValue(HashMap<String, Object> monument, String key) {
+        // El switch se utiliza para verificar qué clave del monumento estamos buscando
         switch (key) {
+            // Si la clave es "nom", "pais" o "categoria", retornamos el valor directamente del HashMap
             case "nom":
             case "pais":
             case "categoria":
                 return monument.get(key);
-            
+    
+            // Si la clave es "any", buscamos el año de declaración dentro de los detalles
             case "any":
-            HashMap<String, Object> detalls =  (HashMap<String, Object>) monument.get("detalls"); //al ser otro hashmap dentro de monument, hay que hacer uno nuevo para acceder
-            if (detalls != null){ //si no esta vacio
-                return detalls.get("any_declaracio");
-
-            }else{
-                return null;
-            }
-        
-
+                // Obtener el HashMap de "detalls" dentro del monumento
+                HashMap<String, Object> detalls = (HashMap<String, Object>) monument.get("detalls"); 
+                // Si "detalls" no es null, obtenemos el valor de "any_declaracio"
+                if (detalls != null) {
+                    return detalls.get("any_declaracio");
+                } else {
+                    return null; // Si "detalls" es null, retornamos null
+                }
+    
+            // Si la clave es "latitud" o "longitud", buscamos las coordenadas dentro de los detalles
             case "latitud":
             case "longitud":
-            HashMap<String, Object> detalls2 = (HashMap<String, Object>) monument.get("detalls"); //al ser otro hashmap dentro de monument, hay que hacer uno nuevo para acceder
-            HashMap<String, Object> coordenadas = (HashMap<String, Object>) detalls2.get("coordenades"); //al ser otro hashmap dentro de detalles, hay que hacer uno nuevo para acceder
-            if (coordenadas != null){
-                return coordenadas.get(key);
-            }else{
-                return null;
-            }
+                // Obtener el HashMap de "detalls" dentro del monumento
+                HashMap<String, Object> detalls2 = (HashMap<String, Object>) monument.get("detalls"); 
+                // Obtener el HashMap de "coordenades" dentro de "detalls"
+                HashMap<String, Object> coordenadas = (HashMap<String, Object>) detalls2.get("coordenades"); 
+                // Si "coordenades" no es null, retornamos la latitud o longitud según la clave
+                if (coordenadas != null) {
+                    return coordenadas.get(key);
+                } else {
+                    return null; // Si "coordenades" es null, retornamos null
+                }
         }
-            return null;
-        }
+        return null; // Si la clave no coincide con ningún caso, retornamos null
+    }
     
     
     
@@ -231,15 +258,21 @@ public class Exercici0203 {
      * @test ./runTest.sh com.exercicis.TestExercici0203#testIsValidValue
      */
     public static boolean isValid(String value, String[] validValues) {
-        if (validValues.length == 0) return false; // si esta vacio devuelve falso
-        for(String valor: validValues){ //recorre los valores validos
-            if (valor.equals(value)){ // si el valor que le pasamos como parametro(el value) esta en la lista de valores validos es verdadero
+        // Si el array de valores válidos está vacío, devuelve false
+        if (validValues.length == 0) return false;
+    
+        // Recorrer los valores válidos
+        for (String valor : validValues) {
+            // Si el valor proporcionado como parámetro (value) coincide con uno de los valores válidos, devuelve true
+            if (valor.equals(value)) {
                 return true;
             }
         }
+    
+        // Si no se encontró coincidencia, devuelve false
         return false;
     }
-
+    
 
     /**
      * Ordena un ArrayList de monuments per un camp concret.
@@ -254,28 +287,38 @@ public class Exercici0203 {
      * @test ./runTest.sh com.exercicis.TestExercici0203#testOrdenaMonuments
      */
     public static ArrayList<HashMap<String, Object>> ordenaMonuments(ArrayList<HashMap<String, Object>> monuments, String sortKey) throws IllegalArgumentException {
-        ArrayList<HashMap<String, Object>> rst = new ArrayList<>(monuments);    //lista con el hashmap de monumentos
-        if (!isValid(sortKey, new String[]{"nom", "any", "latitud", "longitud"})) { //compruebas si la clave es valida o no
-            throw new IllegalArgumentException("Columna invalida"); // si no es valida , lanza una excepcion pa que no pete el programa
+        // Crear una nueva lista a partir de la lista de monumentos para no modificar la original
+        ArrayList<HashMap<String, Object>> rst = new ArrayList<>(monuments);
+    
+        // Verificar si la clave de ordenación proporcionada es válida
+        if (!isValid(sortKey, new String[]{"nom", "any", "latitud", "longitud"})) {
+            // Si la clave no es válida, lanzar una excepción con un mensaje de error
+            throw new IllegalArgumentException("Columna invalida");
         }
-        Collections.sort(rst, (m1, m2) -> {  //esto es para filtrar, le pasas la lista y el m1 y m2 -> son monumentos
+    
+        // Ordenar la lista de monumentos en función del valor asociado a la clave de ordenación
+        Collections.sort(rst, (m1, m2) -> {
+            // Obtener los valores asociados a la clave de ordenación para cada monumento
             Object value1 = getMonumentValue(m1, sortKey);
             Object value2 = getMonumentValue(m2, sortKey);
-
-            //compara los valores segun la llave: 
+    
+            // Comparar los valores dependiendo de la clave de ordenación
             if (sortKey.equals("nom")) {
-                return ((String) value1).compareTo((String) value2); //tienes que indicar la variable del valor(string,integer,double)
+                // Si la clave es "nom", comparar como cadenas de texto
+                return ((String) value1).compareTo((String) value2);
             } else if (sortKey.equals("any")) {
-                return ((Integer) value1).compareTo((Integer) value2);//tienes que indicar la variable del valor(string,integer,double)
+                // Si la clave es "any", comparar como enteros (años)
+                return ((Integer) value1).compareTo((Integer) value2);
             } else {
-                return ((Double) value1).compareTo((Double) value2);//tienes que indicar la variable del valor(string,integer,double)
+                // Si la clave es "latitud" o "longitud", comparar como números decimales (coordenadas)
+                return ((Double) value1).compareTo((Double) value2);
             }
-
         });
-
-        
+    
+        // Devolver la lista ordenada
         return rst;
     }
+    
 
     /**
      * Filtra un ArrayList de monuments per un camp i un valor
@@ -291,18 +334,28 @@ public class Exercici0203 {
      * @test ./runTest.sh com.exercicis.TestExercici0203#testFiltraMonuments
      */
     public static ArrayList<HashMap<String, Object>> filtraMonuments(ArrayList<HashMap<String, Object>> monuments, String filterKey, String filterValue) throws IllegalArgumentException {
+        // Crear una nueva lista vacía para almacenar los monumentos que coincidan con el filtro
         ArrayList<HashMap<String, Object>> rst = new ArrayList<>();
-        if (!isValid(filterKey, new String[]{"nom", "pais", "categoria"})) { //es para elegir el valor(nom,pais,categoria)
+    
+        // Verificar si la clave de filtrado proporcionada es válida
+        if (!isValid(filterKey, new String[]{"nom", "pais", "categoria"})) {
+            // Si la clave no es válida, lanzar una excepción con un mensaje de error
             throw new IllegalArgumentException("Columna invalida");
         }
-        for (HashMap<String, Object> monument : monuments) { //recorres los monumentos
-            if (getMonumentValue(monument, filterKey).toString().equals(filterValue)) { //los mete en la lista rst si coincide el filtro
+    
+        // Recorrer cada monumento de la lista
+        for (HashMap<String, Object> monument : monuments) {
+            // Comprobar si el valor del monumento para la clave de filtrado coincide con el valor proporcionado
+            if (getMonumentValue(monument, filterKey).toString().equals(filterValue)) {
+                // Si coincide, añadir el monumento a la lista de resultados
                 rst.add(monument);
             }
         }
+    
+        // Devolver la lista de monumentos que cumplen con el filtro
         return rst;
     }
-
+    
     /**
      * Genera una cadena de text vàlida per formar el marc d'una taula:
      * 
@@ -317,20 +370,30 @@ public class Exercici0203 {
      * @test ./runTest.sh com.exercicis.TestExercici0203#testGeneraMarcTaula
      */
     public static String generaMarcTaula(int[] columnWidths, char[] separators) {
+        // Usamos StringBuilder para construir la cadena de caracteres de forma eficiente
         StringBuilder rst = new StringBuilder();
-
+    
+        // Añadir el primer separador al inicio de la tabla (por ejemplo, un borde superior)
         rst.append(separators[0]);
+    
+        // Recorremos cada columna de la tabla según sus anchos (columnWidths)
         for (int i = 0; i < columnWidths.length; i++) {
+            // Añadimos el número adecuado de caracteres "─" para crear el borde de la columna
             rst.append(("─").repeat(columnWidths[i]));
+    
+            // Si no es la última columna, añadir el separador entre columnas (por ejemplo, "|")
             if (i < columnWidths.length - 1) {
                 rst.append(separators[1]);
             }
         }
+    
+        // Añadir el último separador para completar la fila (por ejemplo, un borde de la tabla)
         rst.append(separators[2]);
-
+    
+        // Devolver la cadena construida
         return rst.toString();
     }
-
+    
     /**
      * Formata una fila de la taula amb els valors de cada columna, ajustant l'amplada segons 
      * els valors especificats i afegint marges i separadors.
@@ -352,23 +415,41 @@ public class Exercici0203 {
      * @test ./runTest.sh com.exercicis.TestExercici0203#testFormatRow
      */
     public static String formatRow(String[] values, int[] columnWidths) {
+        // Inicializamos la cadena vacía que contendrá la fila formateada
         String rst = "";
-        for (int i = 0; i < values.length; i = i + 1) { 
+    
+        // Recorremos todos los valores que se van a incluir en la fila
+        for (int i = 0; i < values.length; i = i + 1) {
+            // Añadir el separador de columna ("│") al inicio de cada celda
             rst += "│";
+    
+            // Obtener el valor de la celda correspondiente
             String value = values[i];
+    
+            // Si el valor es más largo que el ancho de la columna, lo recortamos
             if (value.length() > columnWidths[i]) {
                 value = value.substring(0, columnWidths[i]);
             }
+    
+            // Añadir el valor a la cadena de la fila
             rst += value;
+    
+            // Calcular el número de espacios que se deben añadir para alinear la columna
             int spaceCount = columnWidths[i] - value.length();
+    
+            // Si hay espacios que agregar, añadirlos al final del valor para completar la columna
             if (spaceCount > 0) {
                 rst += " ".repeat(spaceCount);
             }
-            
         }
+    
+        // Añadir el separador de la última columna al final de la fila
         rst += "│";
+    
+        // Devolver la fila formateada
         return rst;
     }
+    
     
 
     /**

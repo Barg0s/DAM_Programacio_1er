@@ -32,7 +32,7 @@ public class Resolt {
         Locale.setDefault(localeUS);
 
         try {
-            loadMortgages("./data/mortgages.json");
+            loadMortgages("JAVA\\PrimerExam\\data\\mortgages.json");
 
             clearScreen();
 
