@@ -37,7 +37,8 @@ public class Exercici0203 {
             ArrayList<HashMap<String, Object>> monuments = loadMonuments(".\\data\\monuments.json");
             ArrayList<HashMap<String, Object>> monumentsOrdenats = ordenaMonuments(monuments, "nom");
             ArrayList<HashMap<String, Object>> monumentsFiltrats = filtraMonuments(monuments, "categoria", "Monumental");
-            //System.out.println(getMonumentValue(monuments.get(2), "nom"));
+            
+            System.out.println(getMonumentValue(monuments.get(2), "nom"));
             //System.out.println(getMonumentValue(monuments.get(2), "pais"));
             //System.out.println(getMonumentValue(monuments.get(2), "categoria"));
             //System.out.println(getMonumentValue(monuments.get(2), "any"));
@@ -85,16 +86,17 @@ public class Exercici0203 {
      * @test ./runTest.sh com.exercicis.TestExercici0203#testValidarURL
      */
     public static boolean validarURL(String url) {
+        //si la url esta vacia empieza/acaba con punto y si tiene espacio-> si se cumple es falso
         if (url == null || url.length() == 0 || url.startsWith(".") || url.endsWith(".") || url.contains(" ")) {
             return false;
         }
-    
+        //las validas
         String[] valides = {"http://", "https://", "localhost"};
-    
+        //recorres la lista
         for (String valida : valides) {
-            if (url.startsWith(valida)) {
+            if (url.startsWith(valida)) { //si empieza con valida
                 int pos = valida.length();
-                if (url.charAt(pos) == '.') {
+                if (url.charAt(pos) == '.') { //comprueba si el caracter despues de lo valido es un punto o no
                     return false; 
                 }
                 return true;
@@ -123,24 +125,25 @@ public class Exercici0203 {
      * @test ./runTest.sh com.exercicis.TestExercici0203#testLoadMonuments
      */
     public static ArrayList<HashMap<String, Object>> loadMonuments(String filePath) throws IOException {
-        ArrayList<HashMap<String, Object>> rst = new ArrayList<>();
-        String content = new String(Files.readAllBytes(Paths.get(filePath)));
-        JSONArray monumentsArray = new JSONObject(content).getJSONArray("monuments");
-        for (int i = 0; i < monumentsArray.length(); i++) {
-            JSONObject monument = monumentsArray.getJSONObject(i);
-            HashMap<String, Object> monumentHM = new HashMap<>();
 
-            for (String key : monument.keySet()) {
+        ArrayList<HashMap<String, Object>> rst = new ArrayList<>(); //creamos una lista vacia
+        String content = new String(Files.readAllBytes(Paths.get(filePath))); //leer  el contenido del json
+        JSONArray monumentsArray = new JSONObject(content).getJSONArray("monuments"); //hacemos una lista con los datos del json
+        for (int i = 0; i < monumentsArray.length(); i++) {
+            JSONObject monument = monumentsArray.getJSONObject(i); //con esto pillas cada monumento del json
+            HashMap<String, Object> monumentHM = new HashMap<>(); //nuevo hashmap
+            //recorrer las llaves del momument(nombre..pais....) y comprobar
+            for (String key : monument.keySet())  {
                 if (key.equals("nom") || key.equals("pais") || key.equals("categoria")) {
-                    monumentHM.put(key, monument.get(key));
-                } else if (key.equals("detalls")) {
-                    JSONObject detalls = monument.getJSONObject(key);
+                    monumentHM.put(key, monument.get(key)); //colocas en el hashmap el valor(nombre,pais o categoria)
+                } else if (key.equals("detalls")) { //si la llave es detalles
+                    JSONObject detalls = monument.getJSONObject(key); //!!!!!!!!! pilla el diccionario con todo lo de detalles en lugar de todo. (es especifico)
                     HashMap<String, Object> detallsMap = new HashMap<>();
                     HashMap<String, Object> altres = new HashMap<>();
                     for (String detallsKey : detalls.keySet()) {
-                        if (detallsKey.equals("coordenades")) {
+                        if (detallsKey.equals("coordenades")) { //si la llave es coordenades
                             HashMap<String, Object> coordsMap = new HashMap<>();
-                            JSONObject coordenadesJSON = detalls.getJSONObject("coordenades");
+                            JSONObject coordenadesJSON = detalls.getJSONObject("coordenades"); //esta dentro de detalles, asi que lo obtenemos de ahi con getJSONobject(coordenades)
                             Double lat = coordenadesJSON.getDouble("latitud");
                             Double lon =  coordenadesJSON.getDouble("longitud");
                             coordsMap.put("latitud", lat);
@@ -162,9 +165,9 @@ public class Exercici0203 {
                     monumentHM.put(key, detallsMap);
                 }
             }
-            rst.add(monumentHM);
+            rst.add(monumentHM); //añades el hashmap al ArrayList
         }
-        return rst;
+        return rst; //devuelve el  arrayList
     }
 
     /**
@@ -186,24 +189,37 @@ public class Exercici0203 {
      * @test ./runTest.sh com.exercicis.TestExercici0203#testGetMonumentValue
      */
     static Object getMonumentValue(HashMap<String,Object> monument, String key) {
-
+        //el switch es como un if
         switch (key) {
-            case "nom", "pais", "categoria" -> {
-            return monument.get(key);
-            }
-            case "any" -> {
-            HashMap<String, Object> detalls = (HashMap<String, Object>) monument.get("detalls");
-            return detalls != null ? detalls.get("any_declaracio") : null;
-            }
-            case "latitud", "longitud" -> {
-            HashMap<String, Object> detalls = (HashMap<String, Object>) monument.get("detalls");
-            HashMap<String, Object> coordenades = (HashMap<String, Object>) detalls.get("coordenades");
-            return coordenades != null ? coordenades.get(key) : null;
+            case "nom":
+            case "pais":
+            case "categoria":
+                return monument.get(key);
+            
+            case "any":
+            HashMap<String, Object> detalls =  (HashMap<String, Object>) monument.get("detalls"); //al ser otro hashmap dentro de monument, hay que hacer uno nuevo para acceder
+            if (detalls != null){ //si no esta vacio
+                return detalls.get("any_declaracio");
 
+            }else{
+                return null;
+            }
+        
+
+            case "latitud":
+            case "longitud":
+            HashMap<String, Object> detalls2 = (HashMap<String, Object>) monument.get("detalls"); //al ser otro hashmap dentro de monument, hay que hacer uno nuevo para acceder
+            HashMap<String, Object> coordenadas = (HashMap<String, Object>) detalls2.get("coordenades"); //al ser otro hashmap dentro de detalles, hay que hacer uno nuevo para acceder
+            if (coordenadas != null){
+                return coordenadas.get(key);
+            }else{
+                return null;
             }
         }
-        return null;
-    }
+            return null;
+        }
+    
+    
     
     /**
      * Comprova si un valor es troba dins d'una llista de valors vàlids.
@@ -215,9 +231,9 @@ public class Exercici0203 {
      * @test ./runTest.sh com.exercicis.TestExercici0203#testIsValidValue
      */
     public static boolean isValid(String value, String[] validValues) {
-        if (validValues.length == 0) return false;
-        for(String valor: validValues){
-            if (valor.equals(value)){
+        if (validValues.length == 0) return false; // si esta vacio devuelve falso
+        for(String valor: validValues){ //recorre los valores validos
+            if (valor.equals(value)){ // si el valor que le pasamos como parametro(el value) esta en la lista de valores validos es verdadero
                 return true;
             }
         }
@@ -238,20 +254,21 @@ public class Exercici0203 {
      * @test ./runTest.sh com.exercicis.TestExercici0203#testOrdenaMonuments
      */
     public static ArrayList<HashMap<String, Object>> ordenaMonuments(ArrayList<HashMap<String, Object>> monuments, String sortKey) throws IllegalArgumentException {
-        ArrayList<HashMap<String, Object>> rst = new ArrayList<>(monuments);    
-        if (!isValid(sortKey, new String[]{"nom", "any", "latitud", "longitud"})) {
-            throw new IllegalArgumentException("Columna invalida");
+        ArrayList<HashMap<String, Object>> rst = new ArrayList<>(monuments);    //lista con el hashmap de monumentos
+        if (!isValid(sortKey, new String[]{"nom", "any", "latitud", "longitud"})) { //compruebas si la clave es valida o no
+            throw new IllegalArgumentException("Columna invalida"); // si no es valida , lanza una excepcion pa que no pete el programa
         }
-        Collections.sort(rst, (m1, m2) -> {
+        Collections.sort(rst, (m1, m2) -> {  //esto es para filtrar, le pasas la lista y el m1 y m2 -> son monumentos
             Object value1 = getMonumentValue(m1, sortKey);
             Object value2 = getMonumentValue(m2, sortKey);
 
+            //compara los valores segun la llave: 
             if (sortKey.equals("nom")) {
-                return ((String) value1).compareTo((String) value2);
+                return ((String) value1).compareTo((String) value2); //tienes que indicar la variable del valor(string,integer,double)
             } else if (sortKey.equals("any")) {
-                return ((Integer) value1).compareTo((Integer) value2);
+                return ((Integer) value1).compareTo((Integer) value2);//tienes que indicar la variable del valor(string,integer,double)
             } else {
-                return ((Double) value1).compareTo((Double) value2);
+                return ((Double) value1).compareTo((Double) value2);//tienes que indicar la variable del valor(string,integer,double)
             }
 
         });
@@ -275,11 +292,11 @@ public class Exercici0203 {
      */
     public static ArrayList<HashMap<String, Object>> filtraMonuments(ArrayList<HashMap<String, Object>> monuments, String filterKey, String filterValue) throws IllegalArgumentException {
         ArrayList<HashMap<String, Object>> rst = new ArrayList<>();
-        if (!isValid(filterKey, new String[]{"nom", "pais", "categoria"})) {
+        if (!isValid(filterKey, new String[]{"nom", "pais", "categoria"})) { //es para elegir el valor(nom,pais,categoria)
             throw new IllegalArgumentException("Columna invalida");
         }
-        for (HashMap<String, Object> monument : monuments) {
-            if (getMonumentValue(monument, filterKey).toString().equals(filterValue)) {
+        for (HashMap<String, Object> monument : monuments) { //recorres los monumentos
+            if (getMonumentValue(monument, filterKey).toString().equals(filterValue)) { //los mete en la lista rst si coincide el filtro
                 rst.add(monument);
             }
         }
@@ -368,14 +385,15 @@ public class Exercici0203 {
      * @test ./runTest.sh com.exercicis.TestExercici0203#testGetCoordsString
      */
     public static String getCoordsString(HashMap<String, Object> monument) {
+        //pillas la latitud y la longitud de monument
         Double latitud = (Double) getMonumentValue(monument, "latitud");
         Double longitud = (Double) getMonumentValue(monument, "longitud");
 
-        if (latitud == null || longitud == null){
+        if (latitud == null || longitud == null){ //si estan vacias devuelven nada
             return " ";
         }
         
-        return String.format("%.1f,%.1f", latitud, longitud);
+        return String.format("%.1f,%.1f", latitud, longitud); //si no esta vacio las devuelve con formato
     }
 
     /**
@@ -401,19 +419,19 @@ public class Exercici0203 {
     public static void taulaMonuments(ArrayList<HashMap<String, Object>> monuments) {
         StringBuilder rst = new StringBuilder();
         
-        int [] columnWidths = {15, 10, 5, 10};
+        int [] columnWidths = {15, 10, 5, 10}; //guiones que tiene la tabla por seccion └──────────────┴─────┴────┴────────────┘
 
         char[] separators = {'┌', '┬', '┐'};
-        rst.append(generaMarcTaula(columnWidths, separators)).append("\n");
+        rst.append(generaMarcTaula(columnWidths, separators)).append("\n"); //llamas a la funcion con los numeros y los separadores
         
         String[] headers = {"Nom", "Pais", "Any", "Coords"};
-        rst.append(formatRow(headers, columnWidths)).append("\n");
+        rst.append(formatRow(headers, columnWidths)).append("\n");//llamas a la funcion con los numeros y los titulos
         
         char[] separators1 = {'├', '┼', '┤'};
-        rst.append(generaMarcTaula(columnWidths, separators1)).append("\n");
+        rst.append(generaMarcTaula(columnWidths, separators1)).append("\n");//llamas a la funcion con los numeros y los separadores
 
         for (int i = 0; i < monuments.size(); i++) {
-            HashMap<String, Object> monument = monuments.get(i);
+            HashMap<String, Object> monument = monuments.get(i); //rellenas con datos la tabla(obtener de los monumentos)
             String nom = (String) getMonumentValue(monument, "nom");
             String pais = (String) getMonumentValue(monument, "pais");
             String any = String.valueOf(getMonumentValue(monument, "any"));
@@ -426,9 +444,9 @@ public class Exercici0203 {
         separators[0] = '└';
         separators[1] = '┴';
         separators[2] = '┘';
-        rst.append(generaMarcTaula(columnWidths, separators)).append("\n");
+        rst.append(generaMarcTaula(columnWidths, separators)).append("\n");//llamas a la funcion con los numeros y los separadores para cerrar
 
-        System.out.println(rst);
+        System.out.println(rst); //imprimes la lista
     }
 
     /**
@@ -450,19 +468,19 @@ public class Exercici0203 {
      */
     public static ArrayList<HashMap<String, Object>> generaBaralla() {
         ArrayList<HashMap<String, Object>> baralla = new ArrayList<>();
-        String[] palos = {"oros", "copes", "espases", "bastos"};
+        String[] palos = {"oros", "copes", "espases", "bastos"}; //lista con los palos de la baraja
         
         for (String palo : palos) {
-            for (int i = 1; i <= 12; i++) {
-                HashMap<String, Object> carta = new HashMap<>();
-                carta.put("pal", palo);
-                carta.put("numero", i);
-                baralla.add(carta);
+            for (int i = 1; i <= 12; i++) { //haces un for del 1 al 12(los numeros de la baraja)
+                HashMap<String, Object> carta = new HashMap<>(); //haces un hashmap por cada carta
+                carta.put("pal", palo); //pones el palo(oro,copa...)
+                carta.put("numero", i); //pones el numero(1-12)
+                baralla.add(carta); //añades la carta al hashmap
             }
         }
-        Collections.shuffle(baralla);
+        Collections.shuffle(baralla); //meneas la baraja
         
-        return baralla;
+        return baralla; //devuelves la baraja
     }
     
 
@@ -474,19 +492,19 @@ public class Exercici0203 {
      * @throws IOException si hi ha algun error amb l'escriptura de l'arxiu forçant un 'try/catch'
      */
     public static void guardaBaralla(String filePath) throws IOException {
-            ArrayList<HashMap<String, Object>> baralla = generaBaralla();
-            JSONArray jsonArray = new JSONArray();
+            ArrayList<HashMap<String, Object>> baralla = generaBaralla(); //generas la baraja en un arrayList
+            JSONArray jsonArray = new JSONArray(); //haces un array de los json vacio
 
             for (HashMap<String, Object> carta : baralla) {
-                JSONObject cartaJSON = new JSONObject(carta);
-                jsonArray.put(cartaJSON);
+                JSONObject cartaJSON = new JSONObject(carta); //haces un objeto JSON para cada carta que tengas en el arraylist
+                jsonArray.put(cartaJSON); //pones cada carta en el Array JSON
                 
             }
 
-            try (FileWriter file = new FileWriter(filePath)) {
-                file.write(jsonArray.toString(1)); // Format JSON amb indentació de 4 espais
+            try (FileWriter file = new FileWriter(filePath)) { //esto es para escribir en el archivo que quieras
+                file.write(jsonArray.toString(1)); // esto escribe el arrayJSON en el archivo (le puedes poner identacion pa que se vea bien)
             } catch (IOException e) {
-                throw new IOException("Error guardant la baralla al fitxer: " + filePath, e);
+                throw new IOException("Error guardant la baralla al fitxer: " + filePath, e); //gestionar error si no deja guardar
             }
 
     }
