@@ -1,5 +1,3 @@
-
-
 # **Recuperar les UFs pendents de programació**
 
 Aquestes són les condicions:
@@ -15,7 +13,22 @@ Aquestes són les condicions:
 ### TAULES
 
 - Manga
+- | id_manga | Titol | id/Nom_autor | any_publicacio | id_autor | preu | foto |
+  | -------- | ----- | ------------ | -------------- | -------- | ---- | ---- |
+  |          |       |              |                |          |      |      |
 - "Registre" de compres
-- Socis/clients  ?
+- | id | id_user | id_manga | data_compra |
+  | -- | ------- | -------- | ----------- |
+  |    |         |          |             |
+  |    |         |          |             |
+- Socis/clients ?
+- | id_user | nom | cognom | email | foto | dni | data-registre |
+  | ------- | --- | ------ | ----- | ---- | --- | ------------- |
+  |         |     |        |       |      |     |               |
+  |         |     |        |       |      |     |               |
 - Autor
+- | id | nom | pais | any_naixement | foto | obres |
+  | -- | --- | ---- | ------------- | ---- | ----- |
+  |    |     |      |               |      |       |
+  |    |     |      |               |      |       |
 -
